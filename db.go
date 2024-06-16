@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"log"
 
 	_ "modernc.org/sqlite"
 )
@@ -18,6 +19,10 @@ func openDatabase(dbPath string) (*sql.DB, error) {
 		return nil, err
 	}
 
+	if _, err = db.Exec("PRAGMA journal_mode=WAL"); err != nil {
+		log.Printf("Error setting WAL mode. %v", err)
+		return nil, err
+	}
 	// Check to see if the schema already exists and create it if it isn't.
 	if _, err = db.ExecContext(
 		context.Background(),

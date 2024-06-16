@@ -38,8 +38,7 @@ The basics features of go-links are:
 
 Other features:
 
-* Simple deployment - go-links is a single binary along with a sqlite3 database
-  file for persistent storage.
+* Simple deployment - go-links is a single binary.
 * Uses oAuth2 for user authentication (initially with Google accounts)
 * Support sessions.
 * Simple code so that people can easily modify it for their needs.
@@ -54,10 +53,11 @@ helpful for others so I wanted to make the code available.
 ## Installation
 
 1. Copy the go-link binary to wherever you want to run it from.
-1. Use the data.db file included or create you own sqlite3 file with WAL
-   enabled: `sqlite3 data.db 'PRAGMA journal_mode=WAL;'`
 
-This initial version only supports Google Accounts so you'll need to configure
+NOTE: If there is no sqlite file, the program will generate one and enable WAL
+on it.  It will do basically the same as "sqlite3 data.db PRAGMA jounal_mode=WAL"
+
+NOTE: This initial version only supports Google Accounts so you'll need to configure
 the your Google oAuth client from http://console.developers.google.com and get
 your client ID and secret as well as register your callback URLs to point to
 your host.
@@ -66,7 +66,6 @@ your host.
 
 Requirements:
   * go v 1.22+
-  * (optional) sqlite3 if you want to open up the database file yourself.
 
 In the main directory:
 
