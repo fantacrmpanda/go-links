@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Go Links</title>
+    <style>
+        .form-group {
+            display: flex;
+            gap: 10px; /* Adjust the gap between inputs as needed */
+        }
+         .form-group input#keyword {
+            flex: 1; /* Make keyword input take up remaining space */
+            width: 150px; /* Adjust the width of the keyword input */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-group input#url {
+            flex: 2; /* Make url input take up double the space */
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body>
+    {{$user := .Name}}
+    <p>Hello, {{.Name}}</p>
+    <p>{{.Errors}}</p>
+    <form action="/edit" method="post">
+        <div class="form-group">
+            {{ $l := .Editlink}}
+            <input type="text" id="keyword" name="keyword" placeholder="Keyword" {{ if .Editlink.Keyword}}value="{{.Editlink.Keyword}}"{{end}}>
+            <input type="text" id="url" name="url" placeholder="URL" {{ if .Editlink.Url}}value="{{.Editlink.Url}}"{{end}}>
+        </div>
+        <br>
+        <input type="submit" value="Submit">
+    </form>
+
+
+    <ul>
+        {{range .Links}}
+        <li>{{.Keyword}} &rarr; {{.Url}} [{{.Owner}}] {{if eq .Owner $user}}<a href="/edit?keyword={{.Keyword}}&url={{.Url}}">edit</a> <a href=/delete/{{.Keyword}}>delete</a> {{end}}
+        {{end}}
+    </ul>
+</body>
+</html>
