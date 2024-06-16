@@ -1,0 +1,5 @@
+run.sh
+data.db
+data.db-shm
+data.db-wal
+go-links
