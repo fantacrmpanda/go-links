@@ -54,9 +54,11 @@ func main() {
 
 	port := flag.String("port", os.Getenv("PORT"), "HTTP port to be used by the server.  Default value is the PORT enviroment variable.")
 
+	flag.Parse()
+
 	if len(*port) == 0 {
-		log.Println("No port specified so defaulting to 8080.")
-		*port = "8080"
+		log.Println("No port specified so defaulting to 80.")
+		*port = "80"
 	}
 	sessionManager = scs.New()
 	sessionManager.Store = sqlite3store.New(db)
@@ -69,8 +71,8 @@ func main() {
 	http.HandleFunc("/{keyword}/{params...}", GetHandler)
 	http.HandleFunc("/", DefaultPageHandler)
 
-	log.Printf("Starting HTTP server on %v", *port)
-	http.ListenAndServe(":"+*port, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux)))
+	log.Printf("Starting HTTP server on %v.", *port)
+	log.Panic(http.ListenAndServe(":"+*port, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))))
 }
 
 func init() {
