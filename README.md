@@ -84,6 +84,11 @@ the -port parameter or set the environment variable PORT:
 
 `go-links -port=8888`
 
+## Browser Extension
+
+I have a [simple browser
+extension](https://github.com/lazyhacker/go-link-chrome-extension) to rewrite go/ to the go-link server if the
+machine's host settings can't be modified.
 
 ## TODO
 
