@@ -18,7 +18,7 @@ var gconfig = &oauth2.Config{
 	// obtained from https://console.developers.google.com
 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
 	ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-	RedirectURL:  "http://localhost:8080/_callback", // This should match your configured redirect URI
+	RedirectURL:  os.Getenv("GOOGLE_CALLBACK_URL"), // This should match your configured redirect URI
 	Scopes: []string{
 		"https://www.googleapis.com/auth/userinfo.email",
 		"https://www.googleapis.com/auth/userinfo.profile",

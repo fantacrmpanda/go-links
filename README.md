@@ -76,13 +76,13 @@ In the main directory:
 ```
 export GOOGLE_CLIENT_ID=<your client ID from Google>
 export GOOGLE_CLIENT_SECRET=<your client secret from Google>
+export GOOGLE_CALLBACK_URL=<oAuth Callback URL that you set with Google>
 <path-to-go-links>/go-links
 ```
 
-You can chose which HTTP port to use by passing to `go-links` the port through
-the -port parameter or set the environment variable PORT:
-
-`go-links -port=8888`
+You can chose which HTTP and HTTPS ports to use by passing to `go-links` the
+port through command line parameters or environment variables.  `go-links`-help`
+will show the different parameters.
 
 ## Browser Extension
 
