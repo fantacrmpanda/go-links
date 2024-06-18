@@ -8,12 +8,14 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"net/mail"
 	"net/url"
 	"os"
 	"strings"
 
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
+	"github.com/caddyserver/certmagic"
 )
 
 type UserInfo struct {
@@ -52,25 +54,14 @@ func removeAllWhitespaces(s string) string {
 
 func main() {
 
+	var domains domainFlag
 	port := flag.String("port", os.Getenv("PORT"), "HTTP port to be used by the server.  Default value is the PORT enviroment variable.")
 	ssl := flag.String("ssl", os.Getenv("SSL"), "SSL port. Default value is the SSL environment variable")
-
-	// 'generate_cert.go' can be used to generate self-signed certificate
-	// for local testing
-	cert := flag.String("cert", "cert.pem", "certificate PEM")
-	privatekey := flag.String("privatekey", "key.pem", "private key PEM")
+	environment := flag.String("environment", "dev", "The deployment environment: dev, staging, prod. The certs for HTTPS is determined by this.")
+	certadmin := flag.String("admin", "", "Email address of the admin for notifications.")
+	flag.Var(&domains, "domain", "The domains for the certificate.  This flag can be used repeatedly for multiple domains:  -domain=example.com -domain=www.example.com.")
 
 	flag.Parse()
-
-	if len(*port) == 0 {
-		log.Println("No port specified so defaulting to 80.")
-		*port = "80"
-	}
-
-	if len(*ssl) == 0 {
-		log.Println("No SSL port specified so defaulting to 443")
-		*ssl = "443"
-	}
 
 	sessionManager = scs.New()
 	sessionManager.Store = sqlite3store.New(db)
@@ -83,13 +74,52 @@ func main() {
 	http.HandleFunc("/{keyword}/{params...}", GetHandler)
 	http.HandleFunc("/", DefaultPageHandler)
 
-	log.Printf("Starting HTTP server on %v.", *port)
-	go func() {
-		log.Panic(http.ListenAndServe(":"+*port, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))))
-	}()
+	switch *environment {
+	case "staging", "prod":
 
-	log.Printf("Starting SSL server on %v.", *ssl)
-	log.Panic(http.ListenAndServeTLS(":"+*ssl, *cert, *privatekey, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))))
+		log.Printf("domains: %v", domains.String())
+		// read and agree to your CA's legal documents
+		certmagic.DefaultACME.Agreed = true
+		// provide an email address
+
+		if len(*certadmin) > 0 {
+			if _, err := mail.ParseAddress(*certadmin); err != nil {
+
+				log.Panicf("Invalid email address: %v.\n", *certadmin)
+			}
+			certmagic.DefaultACME.Email = *certadmin
+		}
+		if *environment == "staging" {
+			// use the staging endpoint while we're developing
+			certmagic.DefaultACME.CA = certmagic.LetsEncryptStagingCA
+		}
+
+		if err := certmagic.HTTPS(domains, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))); err != nil {
+			log.Panic(err)
+		}
+	default: // dev environment
+
+		if len(*port) == 0 {
+			fmt.Println("No port specified so defaulting to 80.")
+			*port = "80"
+		}
+		if len(*ssl) == 0 {
+			fmt.Println("No SSL port specified so defaulting to 443")
+			*ssl = "443"
+		}
+		// 'generate_cert.go' can be used to generate self-signed certificate
+		// for local testing
+		cert := flag.String("cert", "cert.pem", "certificate PEM")
+		privatekey := flag.String("privatekey", "key.pem", "private key PEM")
+
+		log.Printf("Starting HTTP server on %v.", *port)
+		go func() {
+			log.Panic(http.ListenAndServe(":"+*port, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))))
+		}()
+
+		log.Printf("Starting SSL server on %v.", *ssl)
+		log.Panic(http.ListenAndServeTLS(":"+*ssl, *cert, *privatekey, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))))
+	}
 }
 
 func init() {
