@@ -53,6 +53,12 @@ func removeAllWhitespaces(s string) string {
 func main() {
 
 	port := flag.String("port", os.Getenv("PORT"), "HTTP port to be used by the server.  Default value is the PORT enviroment variable.")
+	ssl := flag.String("ssl", os.Getenv("SSL"), "SSL port. Default value is the SSL environment variable")
+
+	// 'generate_cert.go' can be used to generate self-signed certificate
+	// for local testing
+	cert := flag.String("cert", "cert.pem", "certificate PEM")
+	privatekey := flag.String("privatekey", "key.pem", "private key PEM")
 
 	flag.Parse()
 
@@ -60,6 +66,12 @@ func main() {
 		log.Println("No port specified so defaulting to 80.")
 		*port = "80"
 	}
+
+	if len(*ssl) == 0 {
+		log.Println("No SSL port specified so defaulting to 443")
+		*ssl = "443"
+	}
+
 	sessionManager = scs.New()
 	sessionManager.Store = sqlite3store.New(db)
 
@@ -72,7 +84,12 @@ func main() {
 	http.HandleFunc("/", DefaultPageHandler)
 
 	log.Printf("Starting HTTP server on %v.", *port)
-	log.Panic(http.ListenAndServe(":"+*port, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))))
+	go func() {
+		log.Panic(http.ListenAndServe(":"+*port, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))))
+	}()
+
+	log.Printf("Starting SSL server on %v.", *ssl)
+	log.Panic(http.ListenAndServeTLS(":"+*ssl, *cert, *privatekey, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))))
 }
 
 func init() {

@@ -3,3 +3,5 @@ data.db
 data.db-shm
 data.db-wal
 go-links
+key.pem
+cert.pem
