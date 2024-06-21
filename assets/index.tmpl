@@ -26,6 +26,18 @@
             font-size: 16px;
             box-sizing: border-box;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 <body>
@@ -43,10 +55,25 @@
     </form>
 
 
-    <ul>
+        <table>
+        <thead>
+            <tr>
+                <th>Keyword</th>
+                <th>URL</th>
+                <th>Owner</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
         {{range .Links}}
-        <li>{{.Keyword}} &rarr; {{.Url}} [{{.Owner}}] {{if eq .Owner $user}}<a href="/edit?keyword={{.Keyword}}&url={{.Url}}">edit</a> <a href=/delete/{{.Keyword}}>delete</a> {{end}}
+            <tr>
+                <td>{{.Keyword}}</td>
+                <td><a href="{{.Url}}">{{.Url}}</a></td>
+                <td>[{{.Owner}}]</td>
+                <td>{{if eq .Owner $user}}<a href="/edit?keyword={{.Keyword}}&url={{.Url}}">edit</a> <a href=/delete/{{.Keyword}}>delete</a> {{end}}</td>
+            </tr>
         {{end}}
-    </ul>
+        </tbody>
+    </table>
 </body>
 </html>
