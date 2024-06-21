@@ -5,16 +5,15 @@ go 1.22.4
 require (
 	github.com/alexedwards/scs/sqlite3store v0.0.0-20240316134038-7e11d57e8885
 	github.com/alexedwards/scs/v2 v2.8.0
+	github.com/caddyserver/certmagic v0.21.3
 	golang.org/x/oauth2 v0.21.0
 	modernc.org/sqlite v1.30.1
 )
 
 require (
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
-	github.com/caddyserver/certmagic v0.21.3 // indirect
 	github.com/caddyserver/zerossl v0.1.3 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.7 // indirect

@@ -1,0 +1,13 @@
+# golink.service
+[Unit]
+Description=Go Links
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/golink
+ExecStart=/home/golink/start-links.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

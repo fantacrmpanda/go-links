@@ -13,6 +13,8 @@ import (
 	"os"
 	"strings"
 
+	"lazyhacker.dev/go-links/internal/buildinfo"
+
 	"github.com/alexedwards/scs/sqlite3store"
 	"github.com/alexedwards/scs/v2"
 	"github.com/caddyserver/certmagic"
@@ -55,13 +57,18 @@ func removeAllWhitespaces(s string) string {
 func main() {
 
 	var domains domainFlag
+
 	port := flag.String("port", os.Getenv("PORT"), "HTTP port to be used by the server.  Default value is the PORT enviroment variable.")
 	ssl := flag.String("ssl", os.Getenv("SSL"), "SSL port. Default value is the SSL environment variable")
 	environment := flag.String("environment", "dev", "The deployment environment: dev, staging, prod. The certs for HTTPS is determined by this.")
 	certadmin := flag.String("admin", "", "Email address of the admin for notifications.")
 	flag.Var(&domains, "domain", "The domains for the certificate.  This flag can be used repeatedly for multiple domains:  -domain=example.com -domain=www.example.com.")
-
+	sqldb := flag.String("db", "./data.db", "Path to where to store the database file.")
 	flag.Parse()
+
+	if _, err := openDatabase(*sqldb); err != nil {
+		log.Panic(err)
+	}
 
 	sessionManager = scs.New()
 	sessionManager.Store = sqlite3store.New(db)
@@ -74,6 +81,7 @@ func main() {
 	http.HandleFunc("/{keyword}/{params...}", GetHandler)
 	http.HandleFunc("/", DefaultPageHandler)
 
+	log.Printf("Starting go-links version %v.\n", buildinfo.GetBuild())
 	switch *environment {
 	case "staging", "prod":
 
@@ -100,12 +108,12 @@ func main() {
 	default: // dev environment
 
 		if len(*port) == 0 {
-			fmt.Println("No port specified so defaulting to 80.")
-			*port = "80"
+			fmt.Println("No port specified so defaulting to 8080.")
+			*port = "8080"
 		}
 		if len(*ssl) == 0 {
-			fmt.Println("No SSL port specified so defaulting to 443")
-			*ssl = "443"
+			fmt.Println("No SSL port specified so defaulting to 4400")
+			*ssl = "4400"
 		}
 		// 'generate_cert.go' can be used to generate self-signed certificate
 		// for local testing
@@ -120,14 +128,6 @@ func main() {
 		log.Printf("Starting SSL server on %v.", *ssl)
 		log.Panic(http.ListenAndServeTLS(":"+*ssl, *cert, *privatekey, sessionManager.LoadAndSave(Authenticate(http.DefaultServeMux))))
 	}
-}
-
-func init() {
-	if _, err := openDatabase("data.db"); err != nil {
-		panic(err)
-	}
-
-	sessionManager = scs.New()
 }
 
 // DefaultPageHandler is responsible for serving the main Go Links
