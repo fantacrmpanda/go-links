@@ -160,7 +160,6 @@ WHERE
 `
 
 	for k, v := range i {
-		fmt.Printf("Writing %d to %v in DB.\n", v, k)
 		if _, err := tx.Exec(sql, k, v, v, k); err != nil {
 			tx.Rollback()
 			return fmt.Errorf("error updating count for %v. %v", k, err)
