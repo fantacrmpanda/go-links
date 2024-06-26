@@ -36,6 +36,16 @@ func openDatabase(dbPath string) (*sql.DB, error) {
 		return nil, err
 	}
 
+	if _, err = db.ExecContext(
+		context.Background(),
+		`CREATE TABLE IF NOT EXISTS count (
+			keyword TEXT PRIMARY KEY, 
+			count INTEGER DEFAULT 0
+		)`,
+	); err != nil {
+		return nil, err
+	}
+
 	// Creating schema for sessions.
 	if _, err = db.ExecContext(
 		context.Background(),
@@ -111,7 +121,7 @@ func allLinks() ([]link, error) {
 
 	rows, err := db.QueryContext(
 		context.Background(),
-		"SELECT keyword, URL, owner FROM links ORDER BY created desc")
+		"SELECT links.keyword, links.URL, links.owner, COALESCE(count.count, 0) as views FROM links LEFT JOIN count on links.keyword = count.keyword ORDER BY created desc")
 
 	if err != nil {
 		return nil, err
@@ -122,10 +132,40 @@ func allLinks() ([]link, error) {
 	for rows.Next() {
 
 		var l link
-		if err := rows.Scan(&l.Keyword, &l.Url, &l.Owner); err != nil {
+		if err := rows.Scan(&l.Keyword, &l.Url, &l.Owner, &l.Views); err != nil {
 			return nil, err
 		}
 		links = append(links, l)
 	}
 	return links, nil
+}
+
+func updateCounts(i map[string]int) error {
+
+	var tx *sql.Tx
+	var err error
+
+	tx, err = db.BeginTx(context.Background(), nil)
+	if err != nil {
+		return err
+	}
+
+	sql := `INSERT INTO count(keyword, count) VALUES (?,?)
+on CONFLICT (keyword) DO
+UPDATE
+SET
+	count = count + ?
+WHERE 
+    keyword = ?
+`
+
+	for k, v := range i {
+		fmt.Printf("Writing %d to %v in DB.\n", v, k)
+		if _, err := tx.Exec(sql, k, v, v, k); err != nil {
+			tx.Rollback()
+			return fmt.Errorf("error updating count for %v. %v", k, err)
+		}
+	}
+
+	return tx.Commit()
 }

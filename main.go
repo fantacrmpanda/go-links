@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 
 	"lazyhacker.dev/go-links/internal/buildinfo"
 
@@ -35,6 +36,7 @@ type UserInfo struct {
 type link struct {
 	Keyword string
 	Url     string
+	Views   int
 	Owner   string
 }
 
@@ -54,6 +56,9 @@ func removeAllWhitespaces(s string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(s)), "")
 }
 
+// Channel to pass to the counter whenever a keywork is requested.
+var ch = make(chan string)
+
 func main() {
 
 	var domains domainFlag
@@ -69,6 +74,29 @@ func main() {
 	if _, err := openDatabase(*sqldb); err != nil {
 		log.Panic(err)
 	}
+
+	// Set up a ticker to periodically update keyword counters
+	ticker := time.NewTicker(30 * time.Second)
+	go func() {
+		counters := make(map[string]int)
+		for {
+			select {
+			case kw := <-ch:
+				counters[kw] += 1 // increment by 1 for the keyword
+				fmt.Printf("counter for %v = %d\n", kw, counters[kw])
+			case <-ticker.C:
+				if len(counters) > 0 {
+					fmt.Printf("Writing to db %v.\n", counters)
+					if err := updateCounts(counters); err != nil {
+						fmt.Printf("Unable to update count.  Keeping counters. %v\n", err)
+						break
+					}
+					fmt.Println("reset the map")
+					counters = make(map[string]int) // reset the map
+				}
+			}
+		}
+	}()
 
 	sessionManager = scs.New()
 	sessionManager.Store = sqlite3store.New(db)
@@ -176,6 +204,7 @@ func DefaultPageHandler(w http.ResponseWriter, r *http.Request) {
 // from the given keyword.  If the keyword doesn't exist,
 // it will redirect to the main homepage.
 func GetHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("GetHandler")
 
 	k := r.PathValue("keyword")
 	p := r.PathValue("params")
@@ -212,6 +241,10 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 		redirect_url = redirect_url + "?" + q
 	}
 
+	// Pass keyword to the counter
+
+	fmt.Println("passing keyword into channel to increment.")
+	ch <- k
 	http.Redirect(w, r,
 		redirect_url,
 		http.StatusTemporaryRedirect)

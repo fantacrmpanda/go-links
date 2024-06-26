@@ -61,6 +61,7 @@
             <tr>
                 <th>Keyword</th>
                 <th>URL</th>
+                <th>Views</th>
                 <th>Owner</th>
                 <th>Actions</th>
             </tr>
@@ -70,6 +71,7 @@
             <tr>
                 <td>{{.Keyword}}</td>
                 <td><a href="{{.Url}}">{{.Url}}</a></td>
+                <td>{{.Views}}</td>
                 <td>[{{.Owner}}]</td>
                 <td>{{if eq .Owner $user}}<a href="/edit?keyword={{.Keyword}}&url={{.Url}}">edit</a> <a href=/delete/{{.Keyword}}>delete</a> {{end}}</td>
             </tr>
