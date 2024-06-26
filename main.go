@@ -238,8 +238,9 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Pass keyword to the counter
-
-	ch <- k
+	if r.Header.Get("Purpose") != "prefetch" { // Don't want to counter prefetch.
+		ch <- k
+	}
 	http.Redirect(w, r,
 		redirect_url,
 		http.StatusTemporaryRedirect)
