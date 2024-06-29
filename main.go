@@ -52,12 +52,12 @@ var assets embed.FS
 
 var sessionManager *scs.SessionManager
 
+// Channel to pass to the counter whenever a keywork is requested.
+var ch = make(chan string)
+
 func removeAllWhitespaces(s string) string {
 	return strings.Join(strings.Fields(strings.TrimSpace(s)), "")
 }
-
-// Channel to pass to the counter whenever a keywork is requested.
-var ch = make(chan string)
 
 func main() {
 
@@ -69,6 +69,7 @@ func main() {
 	certadmin := flag.String("admin", "", "Email address of the admin for notifications.")
 	flag.Var(&domains, "domain", "The domains for the certificate.  This flag can be used repeatedly for multiple domains:  -domain=example.com -domain=www.example.com.")
 	sqldb := flag.String("db", "./data.db", "Path to where to store the database file.")
+	t := flag.Int64("t", 60, "How long in minutes between writing the counter to the database.")
 	flag.Parse()
 
 	if _, err := openDatabase(*sqldb); err != nil {
@@ -76,8 +77,9 @@ func main() {
 	}
 
 	// Set up a ticker to periodically update keyword counters
-	ticker := time.NewTicker(60 * time.Minute)
-	go func() {
+	ticker := time.NewTicker(time.Duration(*t) * time.Minute)
+
+	go func(ch <-chan string) {
 		counters := make(map[string]int)
 		for {
 			select {
@@ -93,7 +95,7 @@ func main() {
 				}
 			}
 		}
-	}()
+	}(ch)
 
 	sessionManager = scs.New()
 	sessionManager.Store = sqlite3store.New(db)
