@@ -1,5 +1,5 @@
 
-**go-links** is a stand-along server that lets you set a keyword to get to an
+**go-links** is a stand-alone HTTP server that lets you set a keyword to get to an
 URL.  This is not a URL shortener which takes a URL that generates a shorter
 link, but lets you specify a short and easy-to-remember word to use so that if
 you type something like `go/hr` then it might direct you to your company's HR
@@ -35,20 +35,22 @@ The basics features of go-links are:
   URL.
 * When user uses an unknown keyword, they get directed to a form to create a new
   go link.
+* Supports HTTPS.
+* Uses oAuth2 for user authentication (initially with Google accounts)
+* Support sessions.
 
 Other features:
 
 * Simple deployment - go-links is a single binary.
-* Uses oAuth2 for user authentication (initially with Google accounts)
-* Support sessions.
 * Simple code so that people can easily modify it for their needs.
    * go-links is not meant to be library for building go link services.
 * Simple to build and compile - go-links is built using the Go programming
   langauge (no relations) and uses all native Go code.
 
-NOTE: go-links is not meant for large enterprises with 100k users.  I've not
-optimized for that scale.  This is meant for my needs but thought it might be
-helpful for others so I wanted to make the code available.
+NOTE: go-links is not meant for large enterprises with thousands of users.  This
+was a weekend project tailored for my needs but I did want to make it simple and
+easy to understand (and therefore easy to modify) for those looking for
+something similar.
 
 ## Installation
 
@@ -87,12 +89,14 @@ will show the different parameters.
 ## Browser Extension
 
 I have a [simple browser
-extension](https://github.com/lazyhacker/go-links-chrome-extension) to rewrite go/ to the go-link server if the
-machine's host settings can't be modified.
+extension](https://github.com/lazyhacker/go-links-chrome-extension) to rewrite
+go/ to the go-link server if the machine's host settings can't be modified.
 
 ## TODO
 
 - memory cache
 - link transfer
 - refactor hard-coded strings
+- have a HTTP middle-ware so channels can be shared instead of being a package
+  variable.
 
